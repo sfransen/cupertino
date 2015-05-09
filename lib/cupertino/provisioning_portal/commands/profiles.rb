@@ -380,7 +380,7 @@ command :'profile.alladd' do |c|
 								delta = t2 - t1	
 							
 								say_ok "Successfully added devices to #{name} in #{delta} seconds."
-								sleep 6
+								$sleep 6
 							end
 						end
 					end
@@ -463,7 +463,7 @@ command :'profile.alladdAdhoc' do |c|
 						end
 					end
 				end
-				sleep 8
+				#sleep 8
 			end
 			t4 = Time.now
 			deltaTotal = t4 - t3
