@@ -5,10 +5,8 @@ command :'profiles:list' do |c|
   c.option '--type [TYPE]', [:development, :distribution], "Type of profile (development or distribution; defaults to development)"
 
   c.action do |args, options|
-   # type = (options.type.downcase.to_sym if options.type) || :distribution || :development
-  #  profiles = try{agent.list_profiles(type)}
-  
-    type = args.first.downcase.to_sym rescue nil
+  	type = args.first.downcase.to_sym rescue nil
+   # type = (options.type.downcase.to_sym if options.type) || :development
    # profiles = try{agent.list_profiles(type)}
     profiles = try{agent.list_profiles(:development) + agent.list_profiles(:distribution)}
 
@@ -17,20 +15,19 @@ command :'profiles:list' do |c|
     output = case options.format
              when :csv
                CSV.generate do |csv|
-					 csv << ["Profile", "Type", "App ID", "UUID", "Expiration", "Status"]
+                 csv << ["Profile", "App ID", "UUID", "Expiration", "Status"]
 
                  profiles.each do |profile|
-					   		csv << [profile.name, profile.type, profile.app_id, profile.identifier, profile.expiration, profile.status]
-
+                   csv << [profile.name, profile.app_id, profile.identifier, profile.expiration, profile.status]
                  end
                end
              else
                Terminal::Table.new do |t|
-					 t << ["Profile", "Type", "App ID", "UUID", "Expiration", "Status"]
+                 t << ["Profile", "App ID", "UUID", "Expiration", "Status"]
                  t.add_separator
                  profiles.each do |profile|
-					 	if !profile.name.include? ":"
-                   status = case profile.status
+					 if !profile.name.include? ":"
+                   		status = case profile.status
                             when "Invalid"
                               profile.status.red
                             when "Expired"
@@ -39,7 +36,7 @@ command :'profiles:list' do |c|
                               profile.status.green
                             end
 
-					   t << [profile.name, profile.type, profile.app_id, profile.identifier, profile.expiration, status]
+                   			t << [profile.name, profile.app_id, profile.identifier, profile.expiration, status]
 					   end
                  end
                end
@@ -122,6 +119,36 @@ command :'profiles:download:all' do |c|
         say_ok "Successfully downloaded: '#{filename}'"
       else
         say_error "Could not download profile: '#{profile.name}'"
+      end
+    end
+  end
+end
+
+command :'profiles:create' do |c|
+  c.syntax = 'ios profiles:create [NAME] [APPID]'
+  c.summary = 'Create a Provisioning Profile'
+
+  c.option '--type [TYPE]', [:development, :appstore, :adhoc], "Type of profile (development, appstore, or adhoc); defaults to development"
+  c.option '--certificateid [CERTIFICATEID]', "Backend Certificate ID, output from certificate:getid"
+  c.option '--download', "Downloads Provisioning Profile"
+
+  c.action do |args, options|
+    say_error "Missing arguments, expected [NAME] [APPID]" and abort if args.nil? or args.length != 2
+    type = (options.type.downcase.to_sym if options.type) || :development
+    certificate_id = (options.certificateid if options.certificateid) || nil
+    name, app_id = args
+
+    output = agent.create_profile(name,type,app_id, certificate_id)
+    say_ok "Created profile #{output['name']} with ID #{output['provisioningProfileId']}"
+
+    if options.download
+      profiles = try{agent.list_profiles}.select{|profile| profile.name == output['name']}
+      profiles.each do |profile|
+        if filename = agent.download_profile(profile)
+          say_ok "Successfully downloaded: '#{filename}'"
+        else
+          say_error "Could not download profile: '#{profile.name}'"
+        end
       end
     end
   end

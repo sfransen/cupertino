@@ -61,28 +61,15 @@ command :'devices:add' do |c|
     devices = []
     args.each do |arg|
       components = arg.gsub(/"/, '').split(/\=/)
-      AddThisDeviceNow = components.last
-		if listofDevice.include?(AddThisDeviceNow)
-			say_error  "Devices was already in License do not added device " + AddThisDeviceNow
-    	else
-		  device = Device.new
-		  device.name = components.first
-		  device.udid = components.last
-		  say_warning "Invalid UDID: #{device.udid}" and next unless /\h{40}/ === device.udid
-		  devices << device
-    	end
+      device = Device.new
+      device.name = components.first
+      device.udid = components.last
+      say_warning "Invalid UDID: #{device.udid}" and next unless /\h{40}/ === device.udid
+      devices << device
     end
 
-	if devices.length > 0
-		say_ok "Add these devices now"
-   		puts devices
-    	agent.add_devices(*devices)
+    agent.add_devices(*devices)
 
-    	say_ok "Added #{devices.length} #{devices.length == 1 ? 'device' : 'devices'}"
-    	say_ok "Added #{pluralize(devices.length, 'device')}"
-	else
-		say_error  "Devices was found do not added device"
-    end
-
+    say_ok "Added #{pluralize(devices.length, 'device')}"
   end
 end
