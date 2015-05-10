@@ -380,7 +380,7 @@ command :'profile.alladd' do |c|
 								delta = t2 - t1	
 							
 								say_ok "Successfully added devices to #{name} in #{delta} seconds."
-								$sleep 6
+								#sleep 6
 							end
 						end
 					end
